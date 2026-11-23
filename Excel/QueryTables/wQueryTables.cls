@@ -32,17 +32,43 @@ Private Sub LoadWorkbookQueries(workbook As Excel.workbook)
 
 End Sub
 
-Private Sub LoadWorkSheetQueries(sheet As Excel.Worksheet)
+Private Sub LoadWorkSheetQueries(ByVal sheet As Excel.Worksheet)
 
-  Dim olQuery As Excel.QueryTable
-  Dim wQT     As wQueryTable
+	Dim query	As Excel.QueryTable
+	Dim table	As Excel.ListObject
+	For Each query In sheet.QueryTables
+		Call AddDiscoveredQuery(query)
+	Next query
 
-  For Each olQuery In sheet.QueryTables
-    Set wQT = New wQueryTable
-    Call wQT.Initialize(olQuery)
-    Call mItems.Add(wQT, wQT.Key)
-  Next olQuery
+	For Each table In sheet.ListObjects
+		Set query = ListObjectQuery(table)
+		If Not query Is Nothing Then Call AddDiscoveredQuery(query)
+	Next table
+End Sub
 
+Private Function ListObjectQuery(ByVal table As Excel.ListObject) As Excel.QueryTable
+
+	'Excel raises an error when a table has no QueryTable.
+	On Error Resume Next
+	Set ListObjectQuery = table.QueryTable
+	On Error GoTo 0
+End Function
+
+Private Sub AddDiscoveredQuery(ByVal query As Excel.QueryTable)
+
+	Dim wrappedQuery As New wQueryTable
+	Call wrappedQuery.Initialize(query)
+
+	Dim key As String
+	key = wrappedQuery.Key
+
+	'The same query can be exposed by both worksheet collections.
+	On Error GoTo IgnoreDuplicate
+	Call mItems.Add(wrappedQuery, key)
+	Exit Sub
+
+IgnoreDuplicate:
+	If Err.Number <> 457 Then Call Err.Raise(Err.Number, Err.Source, Err.Description)
 End Sub
 
 Property Get Item(Index As Variant) As wQueryTable
