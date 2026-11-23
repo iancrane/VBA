@@ -1,6 +1,8 @@
 Attribute VB_Name = "QTMeta"
 Option Explicit
 
+Private Const BandingMarker As String = "QTMeta.AutoFormat"
+
 Public Sub ListQueries()
   
   Dim wQTs As New wQueryTables
@@ -23,5 +25,6 @@ Public Sub ListQueries()
   
 	Dim ws As Excel.Worksheet
   Set ws = icSheets.OutputArrayToNewSheet(outputTable)
-  
+	Call TableFormats.AutoFormat(resultRange:=ws.UsedRange, bandingMarker:=BandingMarker)
+
 End Sub
